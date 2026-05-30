@@ -1,8 +1,14 @@
 {
     "config": {
         "abort": {
-            "no_devices_found": "No devices found on the network",
-            "single_instance_allowed": "Already configured. Only a single configuration possible."
+            "no_devices_found": "No AC Infinity devices found nearby.",
+            "single_instance_allowed": "Already configured. Only a single configuration possible.",
+            "not_supported": "This Bluetooth device is not supported."
+        },
+        "error": {
+            "cannot_connect": "Failed to connect to the device.",
+            "unknown": "Unexpected error occurred.",
+            "device_not_found": "Device not found. Make sure your device is powered on and nearby."
         },
         "step": {
             "confirm": {
