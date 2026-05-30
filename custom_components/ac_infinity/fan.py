@@ -45,7 +45,11 @@ class ACInfinityFan(
     """Representation of AC Infinity sensor."""
 
     _attr_speed_count = int_states_in_range(SPEED_RANGE)
-    _attr_supported_features = FanEntityFeature.SET_SPEED
+    _attr_supported_features = (
+        FanEntityFeature.SET_SPEED
+        | FanEntityFeature.TURN_ON
+        | FanEntityFeature.TURN_OFF
+    )
 
     def __init__(
         self,
@@ -95,8 +99,11 @@ class ACInfinityFan(
     def _async_update_attrs(self) -> None:
         """Handle updating _attr values."""
         self._attr_is_on = self._device.is_on
-        self._attr_percentage = ranged_value_to_percentage(
-            SPEED_RANGE, self._device.state.fan
+        fan_speed = self._device.state.fan
+        self._attr_percentage = (
+            ranged_value_to_percentage(SPEED_RANGE, fan_speed)
+            if fan_speed is not None and fan_speed > 0
+            else 0
         )
 
     @callback
