@@ -1,5 +1,7 @@
 # ac-infinity-hacs
- Custom Integration to test AC Infinity Controllers
+Custom Integration to test AC Infinity Controllers
+
+All credit to @hunterjm's integration https://github.com/hunterjm/ac-infinity-hacs to which this is a fork of.
 
 1.0.4
 
