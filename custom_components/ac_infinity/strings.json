@@ -7,7 +7,13 @@
     },
     "abort": {
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
-      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "not_supported": "This Bluetooth device is not supported."
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "device_not_found": "Device not found. Make sure your device is powered on and nearby."
     }
   }
 }
