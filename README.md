@@ -16,3 +16,6 @@ Fixed config_flow.py to abort with "no_devices_found" if no AC Infinity devices 
 Fixed config_flow.py to safely handle missing address in _discovered_devices on form submit
 
 Added not_supported and device_not_found error strings to strings.json and translations/en.json
+
+Note:
+For the Airtap vent fans, humidity is provided as an entity but these devices have no humidity sensor.
