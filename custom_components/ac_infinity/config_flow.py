@@ -39,6 +39,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the bluetooth discovery step."""
         await self.async_set_unique_id(discovery_info.address)
         self._abort_if_unique_id_configured()
+        if MANUFACTURER_ID not in discovery_info.advertisement.manufacturer_data:
+            return self.async_abort(reason="not_supported")
         self._discovery_info = discovery_info
         device: DeviceInfo = parse_manufacturer_data(
             discovery_info.advertisement.manufacturer_data[MANUFACTURER_ID]
@@ -54,34 +56,37 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             address = user_input[CONF_ADDRESS]
-            discovery_info = self._discovered_devices[address]
-            await self.async_set_unique_id(
-                discovery_info.address, raise_on_progress=False
-            )
-            self._abort_if_unique_id_configured()
-            controller = ACInfinityController(
-                discovery_info.device, advertisement_data=discovery_info.advertisement
-            )
-            try:
-                await controller.update()
-            except BLEAK_EXCEPTIONS:
-                errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected error")
-                errors["base"] = "unknown"
+            discovery_info = self._discovered_devices.get(address)
+            if discovery_info is None:
+                errors[CONF_ADDRESS] = "device_not_found"
             else:
-                await controller.stop()
-                return self.async_create_entry(
-                    title=controller.name,
-                    data={
-                        CONF_ADDRESS: discovery_info.address,
-                        CONF_SERVICE_DATA: parse_manufacturer_data(
-                            discovery_info.advertisement.manufacturer_data[
-                                MANUFACTURER_ID
-                            ]
-                        ),
-                    },
+                await self.async_set_unique_id(
+                    discovery_info.address, raise_on_progress=False
                 )
+                self._abort_if_unique_id_configured()
+                controller = ACInfinityController(
+                    discovery_info.device, advertisement_data=discovery_info.advertisement
+                )
+                try:
+                    await controller.update()
+                except BLEAK_EXCEPTIONS:
+                    errors["base"] = "cannot_connect"
+                except Exception:  # pylint: disable=broad-except
+                    _LOGGER.exception("Unexpected error")
+                    errors["base"] = "unknown"
+                else:
+                    await controller.stop()
+                    return self.async_create_entry(
+                        title=controller.name,
+                        data={
+                            CONF_ADDRESS: discovery_info.address,
+                            CONF_SERVICE_DATA: parse_manufacturer_data(
+                                discovery_info.advertisement.manufacturer_data[
+                                    MANUFACTURER_ID
+                                ]
+                            ),
+                        },
+                    )
 
         if discovery := self._discovery_info:
             self._discovered_devices[discovery.address] = discovery
@@ -95,15 +100,18 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     continue
                 self._discovered_devices[discovery.address] = discovery
 
-        if not self._discovered_devices:
-            return self.async_abort(reason="no_devices_found")
-
+        # Filter to only AC Infinity devices
         devices = {}
         for service_info in self._discovered_devices.values():
+            if MANUFACTURER_ID not in service_info.advertisement.manufacturer_data:
+                continue
             device = parse_manufacturer_data(
                 service_info.advertisement.manufacturer_data[MANUFACTURER_ID]
             )
             devices[service_info.address] = f"{device.name} ({service_info.address})"
+
+        if not devices:
+            return self.async_abort(reason="no_devices_found")
 
         data_schema = vol.Schema(
             {
